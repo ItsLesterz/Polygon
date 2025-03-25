@@ -5,7 +5,7 @@ import { Layout, Button, Input, Table, message } from "antd";
 import contratoABI from "./MedicamentoTrace.json"; // Asegúrate de tener el ABI del contrato
 
 const { Header, Content } = Layout;
-const contratoDireccion = "0xTuContratoEnSepolia"; // Reemplaza con la dirección de tu contrato desplegado
+const contratoDireccion = "0x929DA8a3D737bE3aB09fE264ac53eE53B510765e"; // Reemplaza con la dirección de tu contrato desplegado
 
 const App = () => {
     const [cuenta, setCuenta] = useState(null);
@@ -22,33 +22,35 @@ const App = () => {
                 },
             });
             await provider.enable();
-            const web3Provider = new ethers.providers.Web3Provider(provider);
-            const signer = web3Provider.getSigner();
+            const web3Provider = new ethers.BrowserProvider(provider);
+            const signer = await web3Provider.getSigner();
             const address = await signer.getAddress();
             setCuenta(address);
             setProveedor(web3Provider);
             message.success(`Conectado a Rainbow Wallet: ${address}`);
         } catch (error) {
+            console.error("Error al conectar:", error);
             message.error("Error al conectar Rainbow Wallet");
         }
     }
-
+    
     async function registrarMedicamento() {
         if (!proveedor || !cuenta || !lote) {
             message.warning("Ingresa el lote y conecta Rainbow Wallet");
             return;
         }
         try {
-            const signer = proveedor.getSigner();
+            const signer = await proveedor.getSigner();
             const contrato = new ethers.Contract(contratoDireccion, contratoABI, signer);
             const tx = await contrato.registrarMedicamento("Paracetamol", lote, "2025-03-12");
             await tx.wait();
             message.success("Medicamento registrado con éxito");
         } catch (error) {
+            console.error("Error al registrar:", error);
             message.error("Error al registrar medicamento");
         }
     }
-
+    
     async function consultarHistorial() {
         if (!proveedor || !cuenta || !lote) {
             message.warning("Ingresa un lote válido");
@@ -66,22 +68,24 @@ const App = () => {
             setHistorial(datos);
             message.success("Historial cargado");
         } catch (error) {
+            console.error("Error al consultar historial:", error);
             message.error("Error al obtener historial");
         }
     }
-
+    
     async function transferirMedicamento() {
         if (!proveedor || !cuenta || !lote || !nuevoPropietario) {
             message.warning("Ingresa todos los datos");
             return;
         }
         try {
-            const signer = proveedor.getSigner();
+            const signer = await proveedor.getSigner();
             const contrato = new ethers.Contract(contratoDireccion, contratoABI, signer);
             const tx = await contrato.transferirMedicamento(lote, nuevoPropietario);
             await tx.wait();
             message.success("Transferencia realizada con éxito");
         } catch (error) {
+            console.error("Error al transferir:", error);
             message.error("Error al transferir medicamento");
         }
     }
